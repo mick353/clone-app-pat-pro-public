@@ -1,0 +1,52 @@
+name: Validate skill adapters
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: skill-validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate required skill files
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f SKILL.md
+          test -f references/00-contract.md
+          test -f scripts/assert-styles.mjs
+          test -f scripts/partition_bugs.py
+          test -f .agents/skills/clone-app-pat-pro/SKILL.md
+          test -f AGENTS.md
+          test -f CODEX.md
+      - name: Validate Codex skill front matter
+        shell: python
+        run: |
+          from pathlib import Path
+          text=Path(".agents/skills/clone-app-pat-pro/SKILL.md").read_text(encoding="utf-8")
+          assert text.startswith("---\n")
+          front=text.split("---",2)[1]
+          assert "name: clone-app-pat-pro" in front
+          assert "description:" in front
+      - name: Reject Claude-only runtime dependencies from Codex adapter
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -E 'mcp__claude-in-chrome__[^ ]*[[:space:]]*→[[:space:]]*mcp__claude-in-chrome__|allowed-tools:[[:space:]]*.*Agent' .agents/skills/clone-app-pat-pro/SKILL.md; then
+            echo "Codex adapter still contains an unadapted Claude runtime dependency"
+            exit 1
+          fi
+      - name: Syntax-check helper scripts
+        run: |
+          node --check scripts/assert-styles.mjs
+          python -m py_compile scripts/partition_bugs.py
