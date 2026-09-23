@@ -87,3 +87,16 @@ clone linear.app — pixel for pixel
 Claude runs the in-conversation workflow: orchestrates Task sub-agents, drives the Chrome extension (recon every view, extract computed styles, build, then gate the clone with computed-style assertions), and checks in with you after each stage. See SKILL.md.
 
 Artifacts land in `clone-workspace/<name>/` (screenshots, extracted values, the design system, diff overlays, metrics) and the built clone in your `--output` dir.
+
+
+---
+
+## Codex support in this fork
+
+The upstream skill remains Claude-oriented. This fork also contains a
+repository-local Codex adapter at
+`.agents/skills/clone-app-pat-pro/SKILL.md`.
+
+The Codex adapter preserves the extraction and measured-QA method while mapping
+Claude-specific browser/sub-agent assumptions onto capabilities actually
+available to Codex. See [CODEX.md](CODEX.md).
